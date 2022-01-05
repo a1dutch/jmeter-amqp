@@ -1,32 +1,16 @@
-# JMeter-Rabbit-AMQP #
-======================
+# JMeter AMQP Plugin
 
-A [JMeter](http://jmeter.apache.org/) plugin to publish & consume messages from [RabbitMQ](http://www.rabbitmq.com/) or any [AMQP](http://www.amqp.org/) message broker.
+A [JMeter](http://jmeter.apache.org/) plugin to publish & consume messages from any [AMQP](http://www.amqp.org/) message brokers.
 
+## Installing
 
-JMeter Runtime Dependencies
----------------------------
+To install the plugin and its dependencies by copying them into JMeters lib/ directory
 
-Prior to building or installing this JMeter plugin, ensure that the RabbitMQ client library (amqp-client-3.x.x.jar) is installed in JMeter's lib/ directory.
+* jmeter-amqp-{version}.jar
+* amqp-client-{version}.jar
 
+## Building
 
-Build Dependencies
-------------------
+The project is built using Maven. To execute the build script, just execute:
 
-Build dependencies are managed by Ivy. JARs should automagically be downloaded by Ivy as part of the build process.
-
-In addition, you'll need to copy or symlink the following from JMeter's lib/ext directory:
-* ApacheJMeter_core.jar
-
-
-Building
---------
-
-The project is built using Ant. To execute the build script, just execute:
-    ant
-
-
-Installing
-----------
-
-To install the plugin, build the project and copy the generated JMeterAMQP.jar file from target/dist to JMeter's lib/ext/ directory.
+`mvn clean package`
