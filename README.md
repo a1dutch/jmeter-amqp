@@ -1,5 +1,9 @@
 # JMeter AMQP Plugin
 
+![Build (master)](https://img.shields.io/github/workflow/status/a1dutch/jmeter-amqp/cd/master?style=for-the-badge)
+![License](https://img.shields.io/github/license/a1dutch/jmeter-amqp?style=for-the-badge)
+![Issues](https://img.shields.io/github/issues/a1dutch/jmeter-amqp?style=for-the-badge)
+
 A [JMeter](http://jmeter.apache.org/) plugin to publish & consume messages from any [AMQP](http://www.amqp.org/) message brokers.
 
 ## Installing
