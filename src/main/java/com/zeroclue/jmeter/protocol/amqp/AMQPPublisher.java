@@ -3,10 +3,9 @@ package com.zeroclue.jmeter.protocol.amqp;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.samplers.Entry;
@@ -54,9 +53,6 @@ public class AMQPPublisher extends AMQPSampler implements Interruptible {
         super();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SampleResult sample(Entry e) {
         SampleResult result = new SampleResult();
@@ -69,6 +65,7 @@ public class AMQPPublisher extends AMQPSampler implements Interruptible {
         } catch (Exception ex) {
             log.error("Failed to initialize channel : ", ex);
             result.setResponseMessage(ex.toString());
+            result.setResponseData(stackTrace(ex));
             return result;
         }
 
@@ -114,6 +111,7 @@ public class AMQPPublisher extends AMQPSampler implements Interruptible {
             log.debug(ex.getMessage(), ex);
             result.setResponseCode("000");
             result.setResponseMessage(ex.toString());
+            result.setResponseData(stackTrace(ex));
         } finally {
             result.sampleEnd(); // End timimg
         }
@@ -260,7 +258,7 @@ public class AMQPPublisher extends AMQPSampler implements Interruptible {
     }
 
     @Override
-    protected boolean initChannel() throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    protected boolean initChannel() throws IOException, TimeoutException {
         boolean ret = super.initChannel();
         if (getUseTx()) {
             channel.txSelect();

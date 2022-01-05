@@ -5,13 +5,20 @@ import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
+import java.io.PrintStream;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.testelement.ThreadListener;
@@ -47,9 +54,18 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
     protected static final String VIRUTAL_HOST = "AMQPSampler.VirtualHost";
     protected static final String HOST = "AMQPSampler.Host";
     protected static final String PORT = "AMQPSampler.Port";
-    protected static final String SSL = "AMQPSampler.SSL";
     protected static final String USERNAME = "AMQPSampler.Username";
     protected static final String PASSWORD = "AMQPSampler.Password";
+
+    protected static final String SSL = "AMQPSampler.SSL";
+    protected static final String SSL_ALORITHM = "AMQPSampler.SSL.Algorithm";
+    protected static final String SSL_KEYSTORE = "AMQPSampler.SSL.KeyStore";
+    protected static final String SSL_KEYSTORE_TYPE = "AMQPSampler.SSL.KeyStoreType";
+    protected static final String SSL_KEYSTORE_PASSWORD = "AMQPSampler.SSL.KeyStorePassword";
+    protected static final String SSL_TRUST_STORE = "AMQPSampler.SSL.TrustStore";
+    protected static final String SSL_TRUST_STORE_TYPE = "AMQPSampler.SSL.TrustStoreType";
+    protected static final String SSL_TRUST_STORE_PASSWORD = "AMQPSampler.SSL.TrustStorePassword";
+
     private static final String TIMEOUT = "AMQPSampler.Timeout";
     private static final String ITERATIONS = "AMQPSampler.Iterations";
     private static final String MESSAGE_TTL = "AMQPSampler.MessageTTL";
@@ -68,7 +84,7 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
         factory.setRequestedHeartbeat(DEFAULT_HEARTBEAT);
     }
 
-    protected boolean initChannel() throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    protected boolean initChannel() throws IOException, TimeoutException {
         Channel channel = getChannel();
 
         if (channel != null && !channel.isOpen()) {
@@ -88,8 +104,8 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
                     deleteQueue();
                 }
 
-                AMQP.Queue.DeclareOk declareQueueResp = channel.queueDeclare(getQueue(), queueDurable(),
-                    queueExclusive(), queueAutoDelete(), getQueueArguments());
+                AMQP.Queue.DeclareOk declareQueueResp = channel.queueDeclare(getQueue(), isQueueDurable(),
+                    isQueueExclusive(), isQueueAutoDelete(), getQueueArguments());
             }
 
             if (!StringUtils.isBlank(getExchange())) { // Use a named exchange
@@ -98,14 +114,14 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
                 }
 
                 AMQP.Exchange.DeclareOk declareExchangeResp = channel.exchangeDeclare(getExchange(), getExchangeType(),
-                    getExchangeDurable(), getExchangeAutoDelete(), Collections.<String, Object>emptyMap());
+                    isExchangeDurable(), isExchangeAutoDelete(), Collections.<String, Object>emptyMap());
                 if (queueConfigured) {
                     channel.queueBind(getQueue(), getExchange(), getRoutingKey());
                 }
             }
 
             log.info("bound to:" + "\n\t queue: " + getQueue() + "\n\t exchange: " + getExchange() +
-                "\n\t exchange(D)? " + getExchangeDurable() + "\n\t routing key: " + getRoutingKey() +
+                "\n\t exchange(D)? " + isExchangeDurable() + "\n\t routing key: " + getRoutingKey() +
                 "\n\t arguments: " + getQueueArguments());
 
         }
@@ -172,7 +188,7 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
         setProperty(EXCHANGE, name);
     }
 
-    public boolean getExchangeDurable() {
+    public boolean isExchangeDurable() {
         return getPropertyAsBoolean(EXCHANGE_DURABLE);
     }
 
@@ -180,7 +196,7 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
         setProperty(EXCHANGE_DURABLE, durable);
     }
 
-    public boolean getExchangeAutoDelete() {
+    public boolean isExchangeAutoDelete() {
         return getPropertyAsBoolean(EXCHANGE_AUTO_DELETE);
     }
 
@@ -289,8 +305,64 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
         setProperty(SSL, value.toString());
     }
 
-    public boolean connectionSSL() {
+    public boolean isConnectionSSL() {
         return getPropertyAsBoolean(SSL);
+    }
+
+    public String getSslAlgorithm() {
+        return getPropertyAsString(SSL_ALORITHM);
+    }
+
+    public void setSslAlgorithm(String algorithm) {
+        setProperty(SSL_ALORITHM, algorithm);
+    }
+
+    public String getSslKeyStore() {
+        return getPropertyAsString(SSL_KEYSTORE);
+    }
+
+    public void setSslKeyStore(String keystore) {
+        setProperty(SSL_KEYSTORE, keystore);
+    }
+
+    public String getSslKeyStoreType() {
+        return getPropertyAsString(SSL_KEYSTORE_TYPE);
+    }
+
+    public void setSslKeyStoreType(String keystore) {
+        setProperty(SSL_KEYSTORE_TYPE, keystore);
+    }
+
+    public String getSslKeyStorePassword() {
+        return getPropertyAsString(SSL_KEYSTORE_PASSWORD);
+    }
+
+    public void setSslKeyStorePassword(String keystore) {
+        setProperty(SSL_KEYSTORE_PASSWORD, keystore);
+    }
+
+    public String getSslTrustStore() {
+        return getPropertyAsString(SSL_TRUST_STORE);
+    }
+
+    public void setSslTrustStore(String keystore) {
+        setProperty(SSL_TRUST_STORE, keystore);
+    }
+
+    public String getSslTrustStoreType() {
+        return getPropertyAsString(SSL_TRUST_STORE_TYPE);
+    }
+
+    public void setSslTrustStoreType(String keystore) {
+        setProperty(SSL_TRUST_STORE_TYPE, keystore);
+    }
+
+    public String getSslTrustStorePassword() {
+        return getPropertyAsString(SSL_TRUST_STORE_PASSWORD);
+    }
+
+    public void setSslTrustStorePassword(String keystore) {
+        setProperty(SSL_TRUST_STORE_PASSWORD, keystore);
     }
 
     public String getUsername() {
@@ -324,7 +396,7 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
         setProperty(QUEUE_DURABLE, value.toString());
     }
 
-    public boolean queueDurable() {
+    public boolean isQueueDurable() {
         return getPropertyAsBoolean(QUEUE_DURABLE);
     }
 
@@ -343,7 +415,7 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
         setProperty(QUEUE_EXCLUSIVE, value.toString());
     }
 
-    public boolean queueExclusive() {
+    public boolean isQueueExclusive() {
         return getPropertyAsBoolean(QUEUE_EXCLUSIVE);
     }
 
@@ -362,7 +434,7 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
         setProperty(QUEUE_AUTO_DELETE, value.toString());
     }
 
-    public boolean queueAutoDelete() {
+    public boolean isQueueAutoDelete() {
         return getPropertyAsBoolean(QUEUE_AUTO_DELETE);
     }
 
@@ -372,17 +444,6 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
 
     public void setQueueRedeclare(Boolean content) {
         setProperty(QUEUE_REDECLARE, content);
-    }
-
-    protected void cleanup() {
-        try {
-            // getChannel().close(); // closing the connection will close the channel if it's still open
-            if (connection != null && connection.isOpen()) {
-                connection.close();
-            }
-        } catch (IOException e) {
-            log.error("Failed to close connection", e);
-        }
     }
 
     @Override
@@ -396,7 +457,23 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
 
     }
 
-    protected Channel createChannel() throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    void cleanup() {
+        try {
+            if (connection != null && connection.isOpen()) {
+                connection.close();
+            }
+        } catch (IOException e) {
+            log.warn("Failed to close connection", e);
+        }
+    }
+
+    byte[] stackTrace(Exception ex) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ex.printStackTrace(new PrintStream(baos));
+        return baos.toByteArray();
+    }
+
+    private Channel createChannel() throws TimeoutException, IOException {
         log.info("Creating channel " + getVirtualHost() + ":" + getPortAsInt());
 
         if (connection == null || !connection.isOpen()) {
@@ -404,8 +481,9 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
             factory.setVirtualHost(getVirtualHost());
             factory.setUsername(getUsername());
             factory.setPassword(getPassword());
-            if (connectionSSL()) {
-                factory.useSslProtocol("TLS");
+
+            if (isConnectionSSL()) {
+                factory.useSslProtocol(createSslContext());
             }
 
             log.info("RabbitMQ ConnectionFactory using:" + "\n\t virtual host: " + getVirtualHost() + "\n\t host: " +
@@ -429,14 +507,37 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
         return channel;
     }
 
-    protected void deleteQueue() throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    private SSLContext createSslContext() {
+        try {
+            KeyStore keystore = KeyStore.getInstance(getSslKeyStoreType());
+            keystore.load(new FileInputStream(getSslKeyStore()), getSslTrustStorePassword().toCharArray());
+
+            KeyStore trustStore = KeyStore.getInstance(getSslTrustStoreType());
+            trustStore.load(new FileInputStream(getSslTrustStore()), getSslTrustStorePassword().toCharArray());
+
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            kmf.init(keystore, getSslKeyStorePassword().toCharArray());
+
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(trustStore);
+
+            SSLContext context = SSLContext.getInstance(getSslAlgorithm());
+            context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
+            return context;
+        } catch (Exception e) {
+            log.error("could not create ssl context", e);
+            throw new RuntimeException("could not create ssl context: " + e.getMessage(), e);
+        }
+    }
+
+    private void deleteQueue() throws IOException, TimeoutException {
         // use a different channel since channel closes on exception.
         Channel channel = createChannel();
         try {
             log.info("Deleting queue " + getQueue());
             channel.queueDelete(getQueue());
         } catch (Exception ex) {
-            log.debug(ex.toString(), ex);
+            log.debug("failed to delete queue", ex);
             // ignore it.
         } finally {
             if (channel.isOpen()) {
@@ -445,14 +546,14 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
         }
     }
 
-    protected void deleteExchange() throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    private void deleteExchange() throws IOException, TimeoutException {
         // use a different channel since channel closes on exception.
         Channel channel = createChannel();
         try {
             log.info("Deleting exchange " + getExchange());
             channel.exchangeDelete(getExchange());
         } catch (Exception ex) {
-            log.debug(ex.toString(), ex);
+            log.debug("failed to delete exchange", ex);
             // ignore it.
         } finally {
             if (channel.isOpen()) {

@@ -5,9 +5,8 @@ import com.rabbitmq.client.ConsumerCancelledException;
 import com.rabbitmq.client.QueueingConsumer;
 import com.rabbitmq.client.ShutdownSignalException;
 import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.Interruptible;
 import org.apache.jmeter.samplers.SampleResult;
@@ -48,9 +47,6 @@ public class AMQPConsumer extends AMQPSampler implements Interruptible, TestStat
         super();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SampleResult sample(Entry entry) {
         SampleResult result = new SampleResult();
@@ -75,6 +71,7 @@ public class AMQPConsumer extends AMQPSampler implements Interruptible, TestStat
         } catch (Exception ex) {
             log.error("Failed to initialize channel", ex);
             result.setResponseMessage(ex.toString());
+            result.setResponseData(stackTrace(ex));
             return result;
         }
 
@@ -131,6 +128,7 @@ public class AMQPConsumer extends AMQPSampler implements Interruptible, TestStat
             log.warn("AMQP consumer failed to consume", e);
             result.setResponseCode("400");
             result.setResponseMessage(e.getMessage());
+            result.setResponseData(stackTrace(e));
             interrupt();
         } catch (ConsumerCancelledException e) {
             consumer = null;
@@ -138,6 +136,7 @@ public class AMQPConsumer extends AMQPSampler implements Interruptible, TestStat
             log.warn("AMQP consumer failed to consume", e);
             result.setResponseCode("300");
             result.setResponseMessage(e.getMessage());
+            result.setResponseData(stackTrace(e));
             interrupt();
         } catch (InterruptedException e) {
             consumer = null;
@@ -145,14 +144,16 @@ public class AMQPConsumer extends AMQPSampler implements Interruptible, TestStat
             log.info("interuppted while attempting to consume");
             result.setResponseCode("200");
             result.setResponseMessage(e.getMessage());
+            result.setResponseData(stackTrace(e));
         } catch (IOException e) {
             consumer = null;
             consumerTag = null;
             log.warn("AMQP consumer failed to consume", e);
             result.setResponseCode("100");
             result.setResponseMessage(e.getMessage());
+            result.setResponseData(stackTrace(e));
         } finally {
-            result.sampleEnd(); // End timimg
+            result.sampleEnd(); // End timing
         }
 
         trace("AMQPConsumer.sample ended");
@@ -276,9 +277,6 @@ public class AMQPConsumer extends AMQPSampler implements Interruptible, TestStat
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void testEnded() {
 
@@ -309,7 +307,6 @@ public class AMQPConsumer extends AMQPSampler implements Interruptible, TestStat
 
     @Override
     public void cleanup() {
-
         try {
             if (consumerTag != null) {
                 channel.basicCancel(consumerTag);
@@ -319,7 +316,6 @@ public class AMQPConsumer extends AMQPSampler implements Interruptible, TestStat
         }
 
         super.cleanup();
-
     }
 
     /*
@@ -333,7 +329,7 @@ public class AMQPConsumer extends AMQPSampler implements Interruptible, TestStat
     }
 
     @Override
-    protected boolean initChannel() throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    protected boolean initChannel() throws IOException, TimeoutException {
         boolean ret = super.initChannel();
         channel.basicQos(getPrefetchCountAsInt());
         if (getUseTx()) {

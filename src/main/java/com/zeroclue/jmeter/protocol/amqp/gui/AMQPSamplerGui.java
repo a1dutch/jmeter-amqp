@@ -6,9 +6,11 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.border.TitledBorder;
 import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
@@ -23,37 +25,42 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
 
     private static final Logger log = LoggerFactory.getLogger(AMQPSamplerGui.class);
 
-    protected JLabeledTextField exchange = new JLabeledTextField("Exchange");
-    private final JCheckBox exchangeRedeclare = new JCheckBox("Redeclare?", AMQPSampler.DEFAULT_EXCHANGE_REDECLARE);
-    protected JLabeledTextField queue = new JLabeledTextField("Queue");
-    protected JLabeledTextField routingKey = new JLabeledTextField("Routing Key");
-    protected JLabeledTextField virtualHost = new JLabeledTextField("Virtual Host");
-    protected JLabeledTextField messageTTL = new JLabeledTextField("Message TTL");
-    protected JLabeledTextField messageExpires = new JLabeledTextField("Expires");
-    protected JLabeledChoice exchangeType = new JLabeledChoice("Exchange Type",
+    private JLabeledTextField exchange = new JLabeledTextField("Exchange");
+    private JCheckBox exchangeRedeclare = new JCheckBox("Redeclare", AMQPSampler.DEFAULT_EXCHANGE_REDECLARE);
+    private JLabeledTextField queue = new JLabeledTextField("Queue");
+    private JLabeledTextField routingKey = new JLabeledTextField("Routing Key");
+    private JLabeledTextField virtualHost = new JLabeledTextField("Virtual Host");
+    private JLabeledTextField messageTTL = new JLabeledTextField("Message TTL");
+    private JLabeledTextField messageExpires = new JLabeledTextField("Expires");
+    private JLabeledChoice exchangeType = new JLabeledChoice("Exchange Type",
         new String[] { "direct", "topic", "headers", "fanout" });
-    private final JCheckBox exchangeDurable = new JCheckBox("Durable?", AMQPSampler.DEFAULT_EXCHANGE_DURABLE);
-    private final JCheckBox exchangeAutoDelete = new JCheckBox("Auto Delete?",
+    private JCheckBox exchangeDurable = new JCheckBox("Durable", AMQPSampler.DEFAULT_EXCHANGE_DURABLE);
+    private JCheckBox exchangeAutoDelete = new JCheckBox("Auto Delete",
         AMQPSampler.DEFAULT_EXCHANGE_AUTO_DELETE);
-    private final JCheckBox queueDurable = new JCheckBox("Durable?", true);
-    private final JCheckBox queueRedeclare = new JCheckBox("Redeclare?", AMQPSampler.DEFAULT_QUEUE_REDECLARE);
-    private final JCheckBox queueExclusive = new JCheckBox("Exclusive", true);
-    private final JCheckBox queueAutoDelete = new JCheckBox("Auto Delete?", true);
+    private JCheckBox queueDurable = new JCheckBox("Durable", true);
+    private JCheckBox queueRedeclare = new JCheckBox("Redeclare", AMQPSampler.DEFAULT_QUEUE_REDECLARE);
+    private JCheckBox queueExclusive = new JCheckBox("Exclusive", true);
+    private JCheckBox queueAutoDelete = new JCheckBox("Auto Delete", true);
 
-    protected JLabeledTextField host = new JLabeledTextField("Host");
-    protected JLabeledTextField port = new JLabeledTextField("Port");
-    protected JLabeledTextField timeout = new JLabeledTextField("Timeout");
-    protected JLabeledTextField username = new JLabeledTextField("Username");
-    protected JLabeledTextField password = new JLabeledTextField("Password");
-    private final JCheckBox SSL = new JCheckBox("SSL?", false);
+    private JLabeledTextField host = new JLabeledTextField("Host");
+    private JLabeledTextField port = new JLabeledTextField("Port");
+    private JLabeledTextField timeout = new JLabeledTextField("Timeout");
+    private JLabeledTextField username = new JLabeledTextField("Username");
+    private JLabeledTextField password = new JLabeledTextField("Password");
 
-    private final JLabeledTextField iterations = new JLabeledTextField("Number of samples to Aggregate");
+    private JCheckBox ssl = new JCheckBox("Enabled", false);
+    private JLabeledTextField sslAlgorithm = new JLabeledTextField("Algorithm");
+    private JLabeledTextField sslKeyStore = new JLabeledTextField("Key Store");
+    private JLabeledTextField sslKeyStoreType = new JLabeledTextField("Key Store Type");
+    private JLabeledTextField sslKeyStorePassword = new JLabeledTextField("Key Store Password");
+    private JLabeledTextField sslTrustStore = new JLabeledTextField("Trust Store");
+    private JLabeledTextField sslTrustStoreType = new JLabeledTextField("Trust Store Type");
+    private JLabeledTextField sslTrustStorePassword = new JLabeledTextField("Trust Store Password");
+
+    private JLabeledTextField iterations = new JLabeledTextField("Number of samples to Aggregate");
 
     protected abstract void setMainPanel(JPanel panel);
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void configure(TestElement element) {
         super.configure(element);
@@ -64,17 +71,17 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
 
         exchange.setText(sampler.getExchange());
         exchangeType.setText(sampler.getExchangeType());
-        exchangeDurable.setSelected(sampler.getExchangeDurable());
-        exchangeAutoDelete.setSelected(sampler.getExchangeAutoDelete());
+        exchangeDurable.setSelected(sampler.isExchangeDurable());
+        exchangeAutoDelete.setSelected(sampler.isExchangeAutoDelete());
         exchangeRedeclare.setSelected(sampler.getExchangeRedeclare());
         queue.setText(sampler.getQueue());
         routingKey.setText(sampler.getRoutingKey());
         virtualHost.setText(sampler.getVirtualHost());
         messageTTL.setText(sampler.getMessageTTL());
         messageExpires.setText(sampler.getMessageExpires());
-        queueDurable.setSelected(sampler.queueDurable());
-        queueExclusive.setSelected(sampler.queueExclusive());
-        queueAutoDelete.setSelected(sampler.queueAutoDelete());
+        queueDurable.setSelected(sampler.isQueueDurable());
+        queueExclusive.setSelected(sampler.isQueueExclusive());
+        queueAutoDelete.setSelected(sampler.isQueueAutoDelete());
         queueRedeclare.setSelected(sampler.getQueueRedeclare());
 
         timeout.setText(sampler.getTimeout());
@@ -84,13 +91,20 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         port.setText(sampler.getPort());
         username.setText(sampler.getUsername());
         password.setText(sampler.getPassword());
-        SSL.setSelected(sampler.connectionSSL());
+
+        ssl.setSelected(sampler.isConnectionSSL());
+
+        sslAlgorithm.setText(sampler.getSslAlgorithm());
+        sslKeyStore.setText(sampler.getSslKeyStore());
+        sslKeyStoreType.setText(sampler.getSslKeyStoreType());
+        sslKeyStorePassword.setText(sampler.getSslKeyStorePassword());
+        sslTrustStore.setText(sampler.getSslTrustStore());
+        sslTrustStoreType.setText(sampler.getSslTrustStoreType());
+        sslTrustStorePassword.setText(sampler.getSslTrustStorePassword());
+
         log.info("AMQPSamplerGui.configure() called");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void clearGui() {
         exchange.setText("jmeterExchange");
@@ -115,12 +129,17 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         port.setText(AMQPSampler.DEFAULT_PORT_STRING);
         username.setText("guest");
         password.setText("guest");
-        SSL.setSelected(false);
+
+        ssl.setSelected(false);
+        sslAlgorithm.setText("TLS1.2");
+        sslKeyStore.setText("");
+        sslKeyStoreType.setText("PKCS12");
+        sslKeyStorePassword.setText("");
+        sslTrustStore.setText("");
+        sslTrustStoreType.setText("JKS");
+        sslTrustStorePassword.setText("");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void modifyTestElement(TestElement element) {
         AMQPSampler sampler = (AMQPSampler) element;
@@ -149,7 +168,16 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         sampler.setPort(port.getText());
         sampler.setUsername(username.getText());
         sampler.setPassword(password.getText());
-        sampler.setConnectionSSL(SSL.isSelected());
+
+        sampler.setConnectionSSL(ssl.isSelected());
+        sampler.setSslAlgorithm(sslAlgorithm.getText());
+        sampler.setSslKeyStore(sslKeyStore.getText());
+        sampler.setSslKeyStoreType(sslKeyStoreType.getText());
+        sampler.setSslKeyStorePassword(sslKeyStorePassword.getText());
+        sampler.setSslTrustStore(sslTrustStore.getText());
+        sampler.setSslTrustStoreType(sslTrustStoreType.getText());
+        sampler.setSslTrustStorePassword(sslTrustStorePassword.getText());
+
         log.info("AMQPSamplerGui.modifyTestElement() called, set user/pass to " + username.getText() + "/" +
             password.getText() + " on sampler " + sampler);
     }
@@ -172,28 +200,22 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
     }
 
     private Component makeCommonPanel() {
-        GridBagConstraints gridBagConstraints, gridBagConstraintsCommon;
 
-        gridBagConstraintsCommon = new GridBagConstraints();
-        gridBagConstraintsCommon.fill = GridBagConstraints.HORIZONTAL;
-        gridBagConstraintsCommon.anchor = GridBagConstraints.WEST;
-        gridBagConstraintsCommon.weightx = 0.5;
-
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        gridBagConstraints.fill = GridBagConstraints.NONE;
+        GridBagConstraints gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.insets = new Insets(2, 2, 2, 2);
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         gridBagConstraints.weightx = 0.5;
-
-        JPanel commonPanel = new JPanel(new GridBagLayout());
 
         JPanel exchangeSettings = new JPanel(new GridBagLayout());
         exchangeSettings.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Exchange"));
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 2;
         exchangeSettings.add(exchange, gridBagConstraints);
 
-        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridwidth = 1;
+        gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
         exchangeSettings.add(exchangeType, gridBagConstraints);
 
@@ -201,16 +223,16 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         gridBagConstraints.gridy = 1;
         exchangeSettings.add(exchangeDurable, gridBagConstraints);
 
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
         exchangeSettings.add(exchangeAutoDelete, gridBagConstraints);
 
-        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 1;
         exchangeSettings.add(exchangeRedeclare, gridBagConstraints);
 
         JPanel queueSettings = new JPanel(new GridBagLayout());
-        queueSettings.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Queue"));
+        queueSettings.setBorder(newBorder("Queue"));
 
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
@@ -229,67 +251,113 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         queueSettings.add(messageExpires, gridBagConstraints);
 
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridy = 0;
         queueSettings.add(queueDurable, gridBagConstraints);
 
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridy = 1;
         queueSettings.add(queueExclusive, gridBagConstraints);
 
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 3;
+        gridBagConstraints.gridy = 2;
         queueSettings.add(queueAutoDelete, gridBagConstraints);
 
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 3;
         queueSettings.add(queueRedeclare, gridBagConstraints);
 
-        gridBagConstraintsCommon.gridx = 0;
-        gridBagConstraintsCommon.gridy = 0;
+        JPanel sslSettings = new JPanel(new GridBagLayout());
+        sslSettings.setBorder(newBorder("SSL"));
+
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridx = 0;
+        sslSettings.add(ssl, gridBagConstraints);
+
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridx = 1;
+        sslSettings.add(sslAlgorithm, gridBagConstraints);
+
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridx = 0;
+        sslSettings.add(sslKeyStore, gridBagConstraints);
+
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridx = 1;
+        sslSettings.add(sslKeyStorePassword, gridBagConstraints);
+
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridx = 2;
+        sslSettings.add(sslKeyStoreType, gridBagConstraints);
+
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridx = 0;
+        sslSettings.add(sslTrustStore, gridBagConstraints);
+
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridx = 1;
+        sslSettings.add(sslTrustStorePassword, gridBagConstraints);
+
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridx = 2;
+        sslSettings.add(sslTrustStoreType, gridBagConstraints);
+
+        JPanel serverSettings = new JPanel(new GridBagLayout());
+        serverSettings.setBorder(newBorder("Connection"));
+
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridx = 0;
+        serverSettings.add(host, gridBagConstraints);
+
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridx = 1;
+        serverSettings.add(port, gridBagConstraints);
+
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridx = 2;
+        serverSettings.add(timeout, gridBagConstraints);
+
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridx = 0;
+        serverSettings.add(virtualHost, gridBagConstraints);
+
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridx = 0;
+        serverSettings.add(username, gridBagConstraints);
+
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridx = 1;
+        serverSettings.add(password, gridBagConstraints);
+
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        serverSettings.add(sslSettings, gridBagConstraints);
 
         JPanel exchangeQueueSettings = new VerticalPanel();
         exchangeQueueSettings.add(exchangeSettings);
         exchangeQueueSettings.add(queueSettings);
 
-        commonPanel.add(exchangeQueueSettings, gridBagConstraintsCommon);
+        JPanel commonPanel = new JPanel(new GridBagLayout());
 
-        JPanel serverSettings = new JPanel(new GridBagLayout());
-        serverSettings.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Connection"));
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        gridBagConstraints.weightx = 0.5;
 
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
-        serverSettings.add(virtualHost, gridBagConstraints);
+        commonPanel.add(serverSettings, gridBagConstraints);
 
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
-        serverSettings.add(host, gridBagConstraints);
-
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        serverSettings.add(port, gridBagConstraints);
-
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 2;
-        serverSettings.add(SSL, gridBagConstraints);
-
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
-        serverSettings.add(username, gridBagConstraints);
-
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 4;
-        serverSettings.add(password, gridBagConstraints);
-
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 5;
-        serverSettings.add(timeout, gridBagConstraints);
-
-        gridBagConstraintsCommon.gridx = 1;
-        gridBagConstraintsCommon.gridy = 0;
-
-        commonPanel.add(serverSettings, gridBagConstraintsCommon);
+        commonPanel.add(exchangeQueueSettings, gridBagConstraints);
 
         return commonPanel;
+    }
+
+    private TitledBorder newBorder(String name) {
+        return BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), name);
     }
 
 }

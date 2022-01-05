@@ -1,12 +1,11 @@
 package com.zeroclue.jmeter.protocol.amqp.gui;
 
 import com.zeroclue.jmeter.protocol.amqp.AMQPConsumer;
+import java.awt.Dimension;
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.gui.JLabeledTextField;
-
-import javax.swing.*;
-import java.awt.*;
-
 
 public class AMQPConsumerGui extends AMQPSamplerGui {
 
@@ -22,17 +21,15 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
 
     private JPanel mainPanel;
 
-    public AMQPConsumerGui(){
+    public AMQPConsumerGui() {
         init();
     }
 
-    /*
-     * Helper method to set up the GUI screen
-     */
+    @Override
     protected void init() {
         super.init();
-        prefetchCount.setPreferredSize(new Dimension(100,25));
-        useTx.setPreferredSize(new Dimension(100,25));
+        prefetchCount.setPreferredSize(new Dimension(100, 25));
+        useTx.setPreferredSize(new Dimension(100, 25));
 
         mainPanel.add(receiveTimeout);
         mainPanel.add(prefetchCount);
@@ -47,13 +44,12 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
         return "AMQP Consumer";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void configure(TestElement element) {
         super.configure(element);
-        if (!(element instanceof AMQPConsumer)) return;
+        if (!(element instanceof AMQPConsumer)) {
+            return;
+        }
         AMQPConsumer sampler = (AMQPConsumer) element;
 
         readResponse.setSelected(sampler.getReadResponseAsBoolean());
@@ -64,9 +60,6 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
         useTx.setSelected(sampler.getUseTx());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void clearGui() {
         super.clearGui();
@@ -78,9 +71,6 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
         useTx.setSelected(AMQPConsumer.DEFAULT_USE_TX);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public TestElement createTestElement() {
         AMQPConsumer sampler = new AMQPConsumer();
@@ -88,9 +78,6 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
         return sampler;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void modifyTestElement(TestElement te) {
         AMQPConsumer sampler = (AMQPConsumer) te;
@@ -108,9 +95,6 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
         sampler.setUseTx(useTx.isSelected());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getLabelResource() {
         return this.getClass().getSimpleName();
@@ -120,6 +104,5 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
     protected void setMainPanel(JPanel panel) {
         mainPanel = panel;
     }
-
 
 }
