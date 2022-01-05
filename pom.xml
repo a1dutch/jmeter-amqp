@@ -4,7 +4,7 @@
 
     <groupId>uk.co.a1dutch.jmeter.amqp</groupId>
     <artifactId>jmeter-amqp</artifactId>
-    <version>0.0-1.SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
     <name>jmeter-amqp</name>
 
     <properties>
