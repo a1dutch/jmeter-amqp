@@ -1,10 +1,13 @@
 package com.zeroclue.jmeter.protocol.amqp;
 
+import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConsumerCancelledException;
+import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.QueueingConsumer;
 import com.rabbitmq.client.ShutdownSignalException;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import org.apache.jmeter.samplers.Entry;
@@ -339,15 +342,16 @@ public class AMQPConsumer extends AMQPSampler implements Interruptible, TestStat
     }
 
     private String formatHeaders(QueueingConsumer.Delivery delivery) {
-        Map<String, Object> headers = delivery.getProperties().getHeaders();
+        BasicProperties properties = delivery.getProperties();
+        Map<String, Object> headers = properties.getHeaders();
+        Envelope envelope = delivery.getEnvelope();
+        Date timestamp = properties.getTimestamp();
+
         StringBuilder sb = new StringBuilder();
-        sb.append(TIMESTAMP_PARAMETER).append(": ")
-            .append(delivery.getProperties().getTimestamp() != null && delivery.getProperties().getTimestamp() != null ?
-                delivery.getProperties().getTimestamp().getTime() : "")
-            .append("\n");
-        sb.append(EXCHANGE_PARAMETER).append(": ").append(delivery.getEnvelope().getExchange()).append("\n");
-        sb.append(ROUTING_KEY_PARAMETER).append(": ").append(delivery.getEnvelope().getRoutingKey()).append("\n");
-        sb.append(DELIVERY_TAG_PARAMETER).append(": ").append(delivery.getEnvelope().getDeliveryTag()).append("\n");
+        sb.append(TIMESTAMP_PARAMETER).append(": ").append(timestamp != null ? timestamp.getTime() : "").append("\n");
+        sb.append(EXCHANGE_PARAMETER).append(": ").append(envelope.getExchange()).append("\n");
+        sb.append(ROUTING_KEY_PARAMETER).append(": ").append(envelope.getRoutingKey()).append("\n");
+        sb.append(DELIVERY_TAG_PARAMETER).append(": ").append(envelope.getDeliveryTag()).append("\n");
         for (String key : headers.keySet()) {
             sb.append(key).append(": ").append(headers.get(key)).append("\n");
         }
