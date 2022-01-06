@@ -4,10 +4,11 @@
 
     <groupId>uk.co.a1dutch.jmeter.amqp</groupId>
     <artifactId>jmeter-amqp</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${revision}</version>
     <name>jmeter-amqp</name>
 
     <properties>
+        <revision>development</revision>
         <java.version>8</java.version>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
