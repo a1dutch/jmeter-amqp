@@ -33,7 +33,7 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "${{ steps.gitversion.outputs.semVer }}-snapshot"
           prerelease: true
-          title: "v${{ steps.gitversion.outputs.semVer }}-snapshot"
+          title: "${{ steps.gitversion.outputs.semVer }}-snapshot"
           files: |
             LICENSE
             target/*.jar
