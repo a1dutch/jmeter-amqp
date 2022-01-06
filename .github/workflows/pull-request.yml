@@ -1,5 +1,3 @@
-name: pull requests
-
 on: 
   pull-request:
     branches: [ master ]
