@@ -1,4 +1,4 @@
-name: snapshots
+name: pull requests
 
 on: 
   pull-request:

@@ -1,4 +1,4 @@
-name: snapshots
+name: master
 
 on: 
   push:
