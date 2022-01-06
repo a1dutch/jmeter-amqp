@@ -1,7 +1,7 @@
 name: snapshots
 
 on: 
-  push:
+  pull-request:
     branches: [ master ]
   
 jobs:
@@ -26,14 +26,4 @@ jobs:
         id: gitversion
         uses: gittools/actions/gitversion/execute@v0.9.11
       - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots -Drevision=${{ steps.gitversion.outputs.semVer }} verify
-      - name: Create Pre Release
-        uses: marvinpinto/action-automatic-releases@v1.2.1
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ steps.gitversion.outputs.semVer }}-snapshot"
-          prerelease: true
-          title: "${{ steps.gitversion.outputs.semVer }}-snapshot"
-          files: |
-            LICENSE
-            target/*.jar
+        run: mvn --batch-mode --update-snapshots -Drevision="${{ steps.gitversion.outputs.semVer }}-SNAPSHOT" verify
