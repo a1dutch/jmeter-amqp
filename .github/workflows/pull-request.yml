@@ -1,5 +1,7 @@
+name: pull requests
+
 on: 
-  pull-request:
+  pull_request:
     branches: [ master ]
   
 jobs:
