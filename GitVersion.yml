@@ -1,7 +1,7 @@
 mode: Mainline
-branches:
-    master: { }
+branches: 
+  main: 
+    increment: None
 ignore:
     sha: [ ]
 merge-message-formats: { }
-increment: None
