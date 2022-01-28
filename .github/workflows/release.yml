@@ -1,8 +1,8 @@
-name: Maven Build
+name: release
 
 on: 
   push:
-    branches: [ master ]
+    tags: [ "v*" ]
   
 jobs:
   validate:
@@ -26,16 +26,13 @@ jobs:
         id: gitversion
         uses: gittools/actions/gitversion/execute@v0.9.11
       - name: Build with Maven
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn --batch-mode --update-snapshots -Drevision=${{ steps.gitversion.outputs.semVer }}-SNAPSHOT verify
+        run: mvn --batch-mode --update-snapshots -Drevision=${{ steps.gitversion.outputs.semVer }} verify
       - name: Create Pre Release
         uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ steps.gitversion.outputs.semVer }}-snapshot"
-          prerelease: true
-          title: "${{ steps.gitversion.outputs.semVer }}-snapshot"
+          prerelease: false
+          title: "${{ steps.gitversion.outputs.semVer }}"
           files: |
             LICENSE
             target/*.jar
