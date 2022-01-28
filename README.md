@@ -14,11 +14,13 @@ A [JMeter](http://jmeter.apache.org/) plugin to publish & consume messages from 
 
 To install the plugin and its dependencies by copying them into JMeters lib/ directory
 
-* jmeter-amqp-{version}.jar
-* amqp-client-{version}.jar
+* jmeter-amqp-{version}-full.jar
+* amqp-client-4.12.0.jar or above
+
+Alternatively just copy `jmeter-amqp-{version}-full.jar` which includes the dependencies within the jar.
 
 ## Building
 
 The project is built using Maven. To execute the build script, just execute:
 
-`mvn clean package`
+`mvn clean verify`
