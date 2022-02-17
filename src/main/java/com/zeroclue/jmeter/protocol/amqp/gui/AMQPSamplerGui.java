@@ -3,7 +3,6 @@ package com.zeroclue.jmeter.protocol.amqp.gui;
 import com.zeroclue.jmeter.protocol.amqp.AMQPSampler;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -57,16 +56,16 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
     private JLabeledTextField sslTrustStoreType = new JLabeledTextField("Trust Store Type");
     private JLabeledTextField sslTrustStorePassword = new JLabeledTextField("Trust Store Password");
 
-    private JLabeledTextField iterations = new JLabeledTextField("Number of samples to Aggregate");
-
     protected abstract void setMainPanel(JPanel panel);
 
     @Override
     public void configure(TestElement element) {
         super.configure(element);
+
         if (!(element instanceof AMQPSampler)) {
             return;
         }
+
         AMQPSampler sampler = (AMQPSampler) element;
 
         exchange.setText(sampler.getExchange());
@@ -85,7 +84,6 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         queueRedeclare.setSelected(sampler.getQueueRedeclare());
 
         timeout.setText(sampler.getTimeout());
-        iterations.setText(sampler.getIterations());
 
         host.setText(sampler.getHost());
         port.setText(sampler.getPort());
@@ -101,8 +99,6 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         sslTrustStore.setText(sampler.getSslTrustStore());
         sslTrustStoreType.setText(sampler.getSslTrustStoreType());
         sslTrustStorePassword.setText(sampler.getSslTrustStorePassword());
-
-        log.info("AMQPSamplerGui.configure() called");
     }
 
     @Override
@@ -123,7 +119,6 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         queueRedeclare.setSelected(AMQPSampler.DEFAULT_QUEUE_REDECLARE);
 
         timeout.setText(AMQPSampler.DEFAULT_TIMEOUT_STRING);
-        iterations.setText(AMQPSampler.DEFAULT_ITERATIONS_STRING);
 
         host.setText("localhost");
         port.setText(AMQPSampler.DEFAULT_PORT_STRING);
@@ -162,7 +157,6 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         sampler.setQueueRedeclare(queueRedeclare.isSelected());
 
         sampler.setTimeout(timeout.getText());
-        sampler.setIterations(iterations.getText());
 
         sampler.setHost(host.getText());
         sampler.setPort(port.getText());
@@ -177,9 +171,6 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         sampler.setSslTrustStore(sslTrustStore.getText());
         sampler.setSslTrustStoreType(sslTrustStoreType.getText());
         sampler.setSslTrustStorePassword(sslTrustStorePassword.getText());
-
-        log.info("AMQPSamplerGui.modifyTestElement() called, set user/pass to " + username.getText() + "/" +
-            password.getText() + " on sampler " + sampler);
     }
 
     protected void init() {
@@ -190,9 +181,6 @@ public abstract class AMQPSamplerGui extends AbstractSamplerGui {
         JPanel mainPanel = new VerticalPanel();
 
         mainPanel.add(makeCommonPanel());
-
-        iterations.setPreferredSize(new Dimension(50, 25));
-        mainPanel.add(iterations);
 
         add(mainPanel);
 

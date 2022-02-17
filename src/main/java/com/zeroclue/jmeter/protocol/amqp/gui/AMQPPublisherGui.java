@@ -1,8 +1,8 @@
 package com.zeroclue.jmeter.protocol.amqp.gui;
 
 import com.zeroclue.jmeter.protocol.amqp.AMQPPublisher;
+import java.awt.Dimension;
 import java.awt.Rectangle;
-import javax.net.ssl.SSLContext;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -28,11 +28,6 @@ public class AMQPPublisherGui extends AMQPSamplerGui {
 
     private JPanel mainPanel;
 
-    /*
-     * private static final String[] CONFIG_CHOICES = {"File", "Static"};
-     * private final JLabeledRadio configChoice = new JLabeledRadio("Message Source", CONFIG_CHOICES);
-     * private final FilePanel messageFile = new FilePanel("Filename", ALL_FILES);
-     */
     private JLabeledTextArea message = new JLabeledTextArea("Message Content");
     private JLabeledTextField messageRoutingKey = new JLabeledTextField("Routing Key");
     private JLabeledTextField messageType = new JLabeledTextField("Message Type");
@@ -68,8 +63,8 @@ public class AMQPPublisherGui extends AMQPSamplerGui {
         }
         AMQPPublisher sampler = (AMQPPublisher) element;
 
-        persistent.setSelected(sampler.getPersistent());
-        useTx.setSelected(sampler.getUseTx());
+        persistent.setSelected(sampler.isPersistent());
+        useTx.setSelected(sampler.isUseTx());
 
         messageRoutingKey.setText(sampler.getMessageRoutingKey());
         messageType.setText(sampler.getMessageType());
@@ -129,6 +124,8 @@ public class AMQPPublisherGui extends AMQPSamplerGui {
         mainPanel.add(contentType);
         mainPanel.add(messageId);
         mainPanel.add(headers);
+
+        message.setPreferredSize(new Dimension(600, 400));
         mainPanel.add(message);
     }
 
@@ -145,7 +142,6 @@ public class AMQPPublisherGui extends AMQPSamplerGui {
         messageId.setText("");
         headers.clearGui();
         message.setText("");
-
     }
 
     private void configureHeaders(AMQPPublisher sampler) {
@@ -158,8 +154,6 @@ public class AMQPPublisherGui extends AMQPSamplerGui {
     }
 
     public static void main(String[] args) throws Exception {
-        SSLContext.getInstance("TLSv1.2");
-
         JFrame f = new JFrame("panel");
         f.setBounds(new Rectangle(0, 0, 800, 600));
         f.add(new AMQPPublisherGui());

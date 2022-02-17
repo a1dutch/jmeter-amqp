@@ -16,8 +16,7 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
 
     private final JCheckBox purgeQueue = new JCheckBox("Purge Queue", false);
     private final JCheckBox autoAck = new JCheckBox("Auto ACK", true);
-    private final JCheckBox readResponse = new JCheckBox("Read Response", AMQPConsumer.DEFAULT_READ_RESPONSE);
-    private final JCheckBox useTx = new JCheckBox("Use Transactions?", AMQPConsumer.DEFAULT_USE_TX);
+    private final JCheckBox useTx = new JCheckBox("Transactional", AMQPConsumer.DEFAULT_USE_TX);
 
     private JPanel mainPanel;
 
@@ -35,7 +34,6 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
         mainPanel.add(prefetchCount);
         mainPanel.add(purgeQueue);
         mainPanel.add(autoAck);
-        mainPanel.add(readResponse);
         mainPanel.add(useTx);
     }
 
@@ -52,18 +50,16 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
         }
         AMQPConsumer sampler = (AMQPConsumer) element;
 
-        readResponse.setSelected(sampler.getReadResponseAsBoolean());
         prefetchCount.setText(sampler.getPrefetchCount());
         receiveTimeout.setText(sampler.getReceiveTimeout());
-        purgeQueue.setSelected(sampler.purgeQueue());
-        autoAck.setSelected(sampler.autoAck());
-        useTx.setSelected(sampler.getUseTx());
+        purgeQueue.setSelected(sampler.isPurgeQueue());
+        autoAck.setSelected(sampler.isAutoAck());
+        useTx.setSelected(sampler.isUseTx());
     }
 
     @Override
     public void clearGui() {
         super.clearGui();
-        readResponse.setSelected(AMQPConsumer.DEFAULT_READ_RESPONSE);
         prefetchCount.setText(AMQPConsumer.DEFAULT_PREFETCH_COUNT_STRING);
         receiveTimeout.setText("");
         purgeQueue.setSelected(false);
@@ -86,7 +82,6 @@ public class AMQPConsumerGui extends AMQPSamplerGui {
 
         super.modifyTestElement(sampler);
 
-        sampler.setReadResponse(readResponse.isSelected());
         sampler.setPrefetchCount(prefetchCount.getText());
 
         sampler.setReceiveTimeout(receiveTimeout.getText());

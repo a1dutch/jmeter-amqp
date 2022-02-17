@@ -2,14 +2,13 @@ package com.zeroclue.jmeter.protocol.amqp;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.samplers.Entry;
-import org.apache.jmeter.samplers.Interruptible;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.slf4j.Logger;
@@ -25,7 +24,7 @@ import org.slf4j.LoggerFactory;
  *
  * However, access to class fields must be synchronized.
  */
-public class AMQPPublisher extends AMQPSampler implements Interruptible {
+public class AMQPPublisher extends AMQPSampler {
 
     private static final long serialVersionUID = -8420658040465788497L;
 
@@ -47,62 +46,42 @@ public class AMQPPublisher extends AMQPSampler implements Interruptible {
     public static boolean DEFAULT_USE_TX = false;
     private final static String USE_TX = "AMQPPublisher.UseTx";
 
-    private transient Channel channel;
-
-    public AMQPPublisher() {
-        super();
+    @Override
+    protected void init(Connection connection, Channel channel) {
+        if (isUseTx()) {
+            try {
+                channel.txSelect();
+            } catch (IOException e1) {
+                throw new RuntimeException(e1);
+            }
+        }
     }
 
     @Override
-    public SampleResult sample(Entry e) {
+    public SampleResult doSample(Entry e, Channel channel) {
+
         SampleResult result = new SampleResult();
         result.setSampleLabel(getName());
         result.setSuccessful(false);
         result.setResponseCode("500");
 
-        try {
-            initChannel();
-        } catch (Exception ex) {
-            log.error("Failed to initialize channel : ", ex);
-            result.setResponseMessage(ex.toString());
-            result.setResponseData(stackTrace(ex));
-            return result;
-        }
-
-        String data = getMessage(); // Sampler data
-
         result.setSampleLabel(getTitle());
-        /*
-         * Perform the sampling
-         */
 
-        // aggregate samples.
-        int loop = getIterationsAsInt();
-        result.sampleStart(); // Start timing
+        result.sampleStart();
         try {
             AMQP.BasicProperties messageProperties = getProperties();
             byte[] messageBytes = getMessageBytes();
 
-            for (int idx = 0; idx < loop; idx++) {
-                // try to force jms semantics.
-                // but this does not work since RabbitMQ does not sync to disk if consumers are connected as
-                // seen by iostat -cd 1. TPS value remains at 0.
+            channel.basicPublish(getExchange(), getMessageRoutingKey(), messageProperties, messageBytes);
 
-                channel.basicPublish(getExchange(), getMessageRoutingKey(), messageProperties, messageBytes);
-
-            }
-
-            // commit the sample.
-            if (getUseTx()) {
+            if (isUseTx()) {
                 channel.txCommit();
             }
 
-            /*
-             * Set up the sample result details
-             */
-            result.setSamplerData(data);
-            result.setResponseData(new String(messageBytes), null);
-            result.setDataType(SampleResult.TEXT);
+            result.setSentBytes(messageBytes.length);
+            result.setSamplerData(getMessage());
+
+            result.setRequestHeaders(messageProperties.getHeaders().toString());
 
             result.setResponseCodeOK();
             result.setResponseMessage("OK");
@@ -113,7 +92,7 @@ public class AMQPPublisher extends AMQPSampler implements Interruptible {
             result.setResponseMessage(ex.toString());
             result.setResponseData(stackTrace(ex));
         } finally {
-            result.sampleEnd(); // End timimg
+            result.sampleEnd();
         }
 
         return result;
@@ -205,7 +184,7 @@ public class AMQPPublisher extends AMQPSampler implements Interruptible {
         setProperty(new TestElementProperty(HEADERS, headers));
     }
 
-    public Boolean getPersistent() {
+    public Boolean isPersistent() {
         return getPropertyAsBoolean(PERSISTENT, DEFAULT_PERSISTENT);
     }
 
@@ -213,7 +192,7 @@ public class AMQPPublisher extends AMQPSampler implements Interruptible {
         setProperty(PERSISTENT, persistent);
     }
 
-    public Boolean getUseTx() {
+    public Boolean isUseTx() {
         return getPropertyAsBoolean(USE_TX, DEFAULT_USE_TX);
     }
 
@@ -221,26 +200,10 @@ public class AMQPPublisher extends AMQPSampler implements Interruptible {
         setProperty(USE_TX, tx);
     }
 
-    @Override
-    public boolean interrupt() {
-        cleanup();
-        return true;
-    }
-
-    @Override
-    protected Channel getChannel() {
-        return channel;
-    }
-
-    @Override
-    protected void setChannel(Channel channel) {
-        this.channel = channel;
-    }
-
     protected AMQP.BasicProperties getProperties() {
         final AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties.Builder();
 
-        final int deliveryMode = getPersistent() ? 2 : 1;
+        final int deliveryMode = isPersistent() ? 2 : 1;
         final String contentType = StringUtils.defaultIfEmpty(getContentType(), "text/plain");
 
         builder.contentType(contentType)
@@ -255,15 +218,6 @@ public class AMQPPublisher extends AMQPSampler implements Interruptible {
             builder.messageId(getMessageId());
         }
         return builder.build();
-    }
-
-    @Override
-    protected boolean initChannel() throws IOException, TimeoutException {
-        boolean ret = super.initChannel();
-        if (getUseTx()) {
-            channel.txSelect();
-        }
-        return ret;
     }
 
     private Map<String, Object> prepareHeaders() {
