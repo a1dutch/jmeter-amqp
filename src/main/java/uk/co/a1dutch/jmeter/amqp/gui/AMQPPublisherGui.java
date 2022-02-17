@@ -1,6 +1,5 @@
-package com.zeroclue.jmeter.protocol.amqp.gui;
+package uk.co.a1dutch.jmeter.amqp.gui;
 
-import com.zeroclue.jmeter.protocol.amqp.AMQPPublisher;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import javax.swing.JCheckBox;
@@ -11,6 +10,7 @@ import org.apache.jmeter.config.gui.ArgumentsPanel;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.gui.JLabeledTextArea;
 import org.apache.jorphan.gui.JLabeledTextField;
+import uk.co.a1dutch.jmeter.amqp.AMQPPublisher;
 
 /**
  * AMQP Sampler

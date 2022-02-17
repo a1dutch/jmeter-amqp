@@ -1,4 +1,4 @@
-package com.zeroclue.jmeter.protocol.amqp;
+package uk.co.a1dutch.jmeter.amqp;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;

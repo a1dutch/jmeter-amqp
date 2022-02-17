@@ -1,11 +1,11 @@
-package com.zeroclue.jmeter.protocol.amqp.gui;
+package uk.co.a1dutch.jmeter.amqp.gui;
 
-import com.zeroclue.jmeter.protocol.amqp.AMQPConsumer;
 import java.awt.Dimension;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.gui.JLabeledTextField;
+import uk.co.a1dutch.jmeter.amqp.AMQPConsumer;
 
 public class AMQPConsumerGui extends AMQPSamplerGui {
 
