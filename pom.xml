@@ -43,22 +43,37 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <finalName>${project.build.finalName}-full</finalName>
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <artifactSet>
+                                <includes>
+                                    <include>com.rabbitmq:amqp-client</include>
+                                </includes>
+                            </artifactSet>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.rabbitmq</pattern>
+                                    <shadedPattern>uk.co.a1dutch.com.rabbitmq</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>com.rabbitmq:amqp-client</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>full</shadedClassifierName>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
