@@ -6,6 +6,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.security.KeyStore;
@@ -17,6 +18,7 @@ import javax.net.ssl.TrustManagerFactory;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.services.FileServer;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -488,12 +490,13 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
     }
 
     private SSLContext createSslContext() {
+
         try {
             KeyStore keystore = KeyStore.getInstance(getSslKeyStoreType());
-            keystore.load(new FileInputStream(getSslKeyStore()), getSslTrustStorePassword().toCharArray());
+            keystore.load(loadFile(getSslKeyStore()), getSslTrustStorePassword().toCharArray());
 
             KeyStore trustStore = KeyStore.getInstance(getSslTrustStoreType());
-            trustStore.load(new FileInputStream(getSslTrustStore()), getSslTrustStorePassword().toCharArray());
+            trustStore.load(loadFile(getSslTrustStore()), getSslTrustStorePassword().toCharArray());
 
             KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             kmf.init(keystore, getSslKeyStorePassword().toCharArray());
@@ -508,6 +511,10 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
             LoggerFactory.getLogger(getClass()).error("could not create ssl context", e);
             throw new RuntimeException("could not create ssl context: " + e.getMessage(), e);
         }
+    }
+
+    private FileInputStream loadFile(String file) throws FileNotFoundException {
+        return new FileInputStream(FileServer.getFileServer().getResolvedFile(file));
     }
 
 //    private void deleteQueue() throws IOException, TimeoutException {
