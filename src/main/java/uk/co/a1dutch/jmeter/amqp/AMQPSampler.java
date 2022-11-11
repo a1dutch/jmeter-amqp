@@ -413,9 +413,12 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
             init();
             return doSample(e, channel);
         } catch (Exception e1) {
+            logger().error("unexpected error", e1);
+
             SampleResult result = new SampleResult();
             result.setSuccessful(false);
             result.setResponseData(stackTrace(e1));
+            result.setResponseCode("ERROR");
             return result;
         }
     }
@@ -430,16 +433,20 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
     @Override
     public void threadFinished() {
         try {
-            if (channel.isOpen()) {
+            if (channel != null && channel.isOpen()) {
                 channel.close();
             }
 
-            if (connection.isOpen()) {
+            if (connection != null && connection.isOpen()) {
                 connection.close();
             }
         } catch (IOException | TimeoutException e) {
-            LoggerFactory.getLogger(getClass()).warn("failed to cleanup", e);
+            logger().warn("failed to cleanup", e);
         }
+    }
+
+    private Logger logger() {
+        return LoggerFactory.getLogger(getClass());
     }
 
     byte[] stackTrace(Exception ex) {
@@ -453,7 +460,7 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
             return;
         }
 
-        Logger log = LoggerFactory.getLogger(getClass());
+        Logger log = logger();
         log.info("Creating connection " + getVirtualHost() + ":" + getPortAsInt());
 
         factory.setConnectionTimeout(getTimeoutAsInt());
@@ -508,7 +515,7 @@ public abstract class AMQPSampler extends AbstractSampler implements ThreadListe
             context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
             return context;
         } catch (Exception e) {
-            LoggerFactory.getLogger(getClass()).error("could not create ssl context", e);
+            logger().error("could not create ssl context", e);
             throw new RuntimeException("could not create ssl context: " + e.getMessage(), e);
         }
     }
